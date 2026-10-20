@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrie Baclayon // Terminal Portfolio</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Pixelify Sans, Space Grotesk, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Pixelify+Sans:wght@500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cyberBg: '#0d0e15',
+            cyberCard: '#141622',
+            cyberHeader: '#1a1d2e',
+            cyberBorder: '#272a40',
+            neonPurple: '#7928ca',
+            neonCyan: '#00dfd8',
+            neonPink: '#ff0080',
+            neonGold: '#ffd700',
+            neonGreen: '#00ff66'
+          },
+          fontFamily: {
+            pixel: ['"Pixelify Sans"', 'cursive'],
+            sans: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Global Glows & Custom Scrollbar */
+    body {
+      background-color: #0d0e15;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #272a40;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00dfd8;
+    }
+
+    /* Cyber Glow Effects */
+    .glow-cyan {
+      box-shadow: 0 0 20px rgba(0, 223, 216, 0.25);
+    }
+    .glow-purple {
+      box-shadow: 0 0 25px rgba(121, 40, 202, 0.3);
+    }
+    .glow-pink {
+      box-shadow: 0 0 20px rgba(255, 0, 128, 0.25);
+    }
+
+    /* Scanline Overlay */
+    .scanlines {
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 0, 0, 0.3) 50%,
+        rgba(0, 0, 0, 0.3)
+      );
+      background-size: 100% 4px;
+    }
+
+    /* Perspective Grid Effect */
+    .perspective-grid {
+      position: fixed;
+      bottom: -30%;
+      left: -50%;
+      width: 200%;
+      height: 100%;
+      background-image: 
+        linear-gradient(to right, rgba(121, 40, 202, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(121, 40, 202, 0.15) 1px, transparent 1px);
+      background-size: 50px 50px;
+      transform: perspective(400px) rotateX(60deg);
+      z-index: -1;
+      pointer-events: none;
+      mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
+    }
+
+    .window-active {
+      display: block;
+      animation: windowOpen 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes windowOpen {
+      from {
+        opacity: 0;
+        transform: scale(0.97) translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-neonCyan selection:text-black">
+
+  <!-- Interactive Background Canvas -->
+  <canvas id="bgCanvas" class="fixed top-0 left-0 w-full h-full -z-20 pointer-events-none opacity-40"></canvas>
+  <div class="perspective-grid"></div>
+  <div class="fixed top-0 left-0 w-full h-full -z-10 scanlines pointer-events-none opacity-20"></div>
+
+  <!-- ================= HEADER TERMINAL BAR ================= -->
+  <header class="sticky top-0 z-50 bg-cyberHeader/90 backdrop-blur-md border-b border-cyberBorder px-4 py-2.5">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3 font-mono text-xs">
+      
+      <!-- System Name & Status -->
+      <div class="flex items-center gap-3">
+        <div class="flex gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+        </div>
+        <span class="font-pixel text-sm text-neonCyan font-bold tracking-wider">CARRIE BACLAYON // OS v2.0</span>
+      </div>
+
+      <!-- Live Clock & Cebu Location -->
+      <div class="flex items-center gap-4 text-slate-400">
+        <span class="hidden sm:inline-flex items-center gap-1.5 bg-cyberCard px-2.5 py-1 rounded border border-cyberBorder">
+          <i class="fa-solid fa-location-dot text-neonPink text-[10px]"></i> CEBU CITY, PH (GMT+8)
+        </span>
+        <span id="liveClock" class="bg-cyberCard px-2.5 py-1 rounded border border-cyberBorder text-neonGold font-semibold">
+          00:00:00 PST
+        </span>
+
+        <!-- Audio Mute/Unmute Toggle Button -->
+        <button 
+          onclick="toggleAudioSound()" 
+          id="soundBtn"
+          class="flex items-center gap-1.5 bg-cyberBorder hover:bg-cyberBorder/80 px-2.5 py-1 rounded text-slate-200 transition-colors cursor-pointer border border-slate-700"
+          title="Toggle Web Audio SFX"
+        >
+          <i id="soundIcon" class="fa-solid fa-volume-high text-neonCyan"></i>
+          <span id="soundText" class="text-[10px]">SFX: ON</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-6xl mx-auto px-4 py-6 w-full space-y-6 flex-grow">
+
+    <!-- ================= PROFILE TERMINAL CARD ================= -->
+    <section class="bg-cyberCard/90 border-2 border-cyberBorder rounded-2xl p-6 md:p-8 relative overflow-hidden backdrop-blur-lg glow-purple">
+      
+      <!-- Ambient Glow Orb -->
+      <div class="absolute -top-20 -right-20 w-64 h-64 bg-neonPurple/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-neonCyan/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
+        
+        <!-- Avatar Wrapper -->
+        <div class="relative group flex-shrink-0 flex flex-col items-center">
+          <div class="relative w-32 h-32 rounded-2xl p-1 bg-gradient-to-br from-neonCyan via-neonPurple to-neonPink shadow-lg group">
+            <img 
+              id="userAvatar"
+              src="watermarked_img_6198333681162290980.jpg" 
+              alt="Carrie Baclayon" 
+              class="w-full h-full object-cover rounded-xl bg-cyberCard"
+              onerror="this.onerror=null; this.src='https://placehold.co/300x300/141622/ffffff?text=Carrie+B.';"
+            >
+            <!-- Hover Overlay for Upload -->
+            <label for="avatarUpload" class="absolute inset-0 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white text-[10px] font-mono gap-1">
+              <i class="fa-solid fa-camera text-neonCyan text-base"></i>
+              <span>CHANGE PHOTO</span>
+            </label>
+          </div>
+          
+          <!-- Hidden File Input -->
+          <input type="file" id="avatarUpload" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+
+          <!-- Live Status Indicator -->
+          <div class="absolute -top-2 -right-2 bg-cyberCard border border-cyberBorder px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-md">
+            <span class="w-2.5 h-2.5 rounded-full bg-neonGreen animate-pulse"></span>
+            <span class="text-[10px] font-mono text-neonGreen font-semibold">ONLINE</span>
+          </div>
+
+          <!-- Explicit Upload Button below Avatar -->
+          <label for="avatarUpload" class="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-cyberHeader hover:bg-cyberBorder border border-neonCyan/50 text-neonCyan rounded font-mono text-[10px] cursor-pointer transition-colors shadow">
+            <i class="fa-solid fa-upload"></i> Upload Photo
+          </label>
+        </div>
+
+        <!-- Bio & Quick Specs -->
+        <div class="space-y-3 flex-grow">
+          
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
+            <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded bg-neonPurple/20 text-purple-300 border border-neonPurple/40">
+              OPERATIONS & EXECUTIVE VA
+            </span>
+            <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded bg-neonCyan/10 text-neonCyan border border-neonCyan/30">
+              LICENSED TEACHER (LPT)
+            </span>
+            <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded bg-neonPink/10 text-pink-300 border border-neonPink/30">
+              SUBSTACK WRITER
+            </span>
+          </div>
+
+          <h1 class="font-pixel text-3xl md:text-5xl font-bold text-white tracking-wide">
+            CARRIE BACLAYON
+          </h1>
+
+          <p class="text-sm md:text-base text-slate-300 font-medium max-w-2xl">
+            Operations Team Lead & Executive Virtual Assistant with 5+ years driving healthcare revenue cycle management, SLA compliance, and multi-provider administrative workflows.
+          </p>
+
+          <!-- Signature Quote -->
+          <div class="bg-cyberHeader/80 border-l-4 border-neonCyan p-3 rounded-r-xl max-w-2xl text-left">
+            <p class="font-sans italic text-slate-200 text-xs md:text-sm">
+              <i class="fa-solid fa-quote-left text-neonCyan/60 mr-1.5"></i>
+              On an ordinary Tuesday, I'm the calm one keeping everything moving.
+            </p>
+          </div>
+
+          <!-- Dual-Mode Quick Specs Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-mono">
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-2.5 rounded-lg flex items-center gap-2.5">
+              <i class="fa-solid fa-sun text-neonGold text-base"></i>
+              <div>
+                <span class="text-slate-400 block text-[10px]">DAYTIME CORE</span>
+                <span class="text-slate-200 font-semibold">Healthcare Billing & Admin Ops</span>
+              </div>
+            </div>
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-2.5 rounded-lg flex items-center gap-2.5">
+              <i class="fa-solid fa-moon text-neonPurple text-base"></i>
+              <div>
+                <span class="text-slate-400 block text-[10px]">AFTER HOURS</span>
+                <span class="text-slate-200 font-semibold">Substack Writer & Canva Designer</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= INTERACTIVE LAUNCHPAD NAV GRID ================= -->
+    <section>
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="font-pixel text-lg text-neonCyan font-bold tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-terminal"></i> SYSTEM_LAUNCHPAD
+        </h2>
+        <span class="text-xs font-mono text-slate-500">SELECT MODULE TO RUN</span>
+      </div>
+
+      <nav class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        
+        <!-- Tab Button 1 -->
+        <button 
+          onclick="switchTab('experience')" 
+          id="btn-experience"
+          class="tab-btn bg-cyberCard border-2 border-neonCyan/60 hover:border-neonCyan p-4 rounded-xl flex flex-col items-center gap-2 text-center transition-all cursor-pointer group glow-cyan"
+        >
+          <span class="text-2xl text-neonCyan group-hover:scale-110 transition-transform"><i class="fa-solid fa-bolt"></i></span>
+          <span class="font-pixel text-sm font-bold text-white tracking-wider">1. EXPERIENCE</span>
+          <span class="text-[10px] font-mono text-slate-400">XtendOps / Amazon</span>
+        </button>
+
+        <!-- Tab Button 2 -->
+        <button 
+          onclick="switchTab('systems')" 
+          id="btn-systems"
+          class="tab-btn bg-cyberCard border-2 border-cyberBorder hover:border-neonPurple p-4 rounded-xl flex flex-col items-center gap-2 text-center transition-all cursor-pointer group"
+        >
+          <span class="text-2xl text-neonPurple group-hover:scale-110 transition-transform"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+          <span class="font-pixel text-sm font-bold text-white tracking-wider">2. TOOLBELT</span>
+          <span class="text-[10px] font-mono text-slate-400">Dentrix / Salesforce</span>
+        </button>
+
+        <!-- Tab Button 3 -->
+        <button 
+          onclick="switchTab('writing')" 
+          id="btn-writing"
+          class="tab-btn bg-cyberCard border-2 border-cyberBorder hover:border-neonPink p-4 rounded-xl flex flex-col items-center gap-2 text-center transition-all cursor-pointer group"
+        >
+          <span class="text-2xl text-neonPink group-hover:scale-110 transition-transform"><i class="fa-solid fa-pen-nib"></i></span>
+          <span class="font-pixel text-sm font-bold text-white tracking-wider">3. WRITING & DESIGN</span>
+          <span class="text-[10px] font-mono text-slate-400">Substack / Canva</span>
+        </button>
+
+        <!-- Tab Button 4 -->
+        <button 
+          onclick="switchTab('connect')" 
+          id="btn-connect"
+          class="tab-btn bg-cyberCard border-2 border-cyberBorder hover:border-neonGold p-4 rounded-xl flex flex-col items-center gap-2 text-center transition-all cursor-pointer group"
+        >
+          <span class="text-2xl text-neonGold group-hover:scale-110 transition-transform"><i class="fa-solid fa-paper-plane"></i></span>
+          <span class="font-pixel text-sm font-bold text-white tracking-wider">4. CONNECT</span>
+          <span class="text-[10px] font-mono text-slate-400">Email & Socials</span>
+        </button>
+
+      </nav>
+    </section>
+
+    <!-- ================= TAB CONTENT WINDOWS ================= -->
+    <section class="bg-cyberCard border-2 border-cyberBorder rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
+      
+      <!-- OS Window Controls Header -->
+      <div class="bg-cyberHeader px-4 py-3 border-b border-cyberBorder flex justify-between items-center font-mono text-xs">
+        <div class="flex items-center gap-2">
+          <div class="flex gap-1.5">
+            <button onclick="closeCurrentWindow()" class="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors" title="Close Window"></button>
+            <button onclick="minimizeWindow()" class="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors" title="Minimize Window"></button>
+            <button onclick="maximizeWindow()" class="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors" title="Maximize Window"></button>
+          </div>
+          <span id="windowTitle" class="text-slate-300 font-semibold ml-2">module://work_experience.exe</span>
+        </div>
+        <span class="text-[10px] text-slate-500 hidden sm:inline-block">STATUS: RUNNING [PID: 2026]</span>
+      </div>
+
+      <div id="windowBody" class="p-6 md:p-8 min-h-[380px]">
+
+        <!-- ================= TAB 1: WORK EXPERIENCE ================= -->
+        <div id="tab-experience" class="window-tab window-active space-y-6">
+          <div class="border-b border-cyberBorder pb-4 flex justify-between items-end">
+            <div>
+              <h3 class="font-pixel text-2xl text-neonCyan font-bold">WORK_EXPERIENCE.LOG</h3>
+              <p class="text-xs font-mono text-slate-400">Chronological history of operations leadership & claims execution.</p>
+            </div>
+            <span class="hidden sm:inline-block text-xs font-mono text-neonCyan bg-neonCyan/10 px-2.5 py-1 rounded border border-neonCyan/30">
+              5+ YEARS TOTAL
+            </span>
+          </div>
+
+          <!-- Timeline Grid -->
+          <div class="space-y-6 border-l-2 border-cyberBorder ml-2 md:ml-4 pl-4 md:pl-6">
+            
+            <!-- Job 1 -->
+            <div class="relative group space-y-2">
+              <div class="absolute -left-[23px] md:-left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-neonCyan ring-4 ring-cyberCard"></div>
+              
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                <h4 class="font-bold text-base text-white flex items-center gap-2">
+                  Operations Team Lead
+                </h4>
+                <span class="font-mono text-xs text-neonGold">AUG 2023 – AUG 2026</span>
+              </div>
+              <p class="text-xs font-mono font-semibold text-neonCyan">XtendOps // Sonrava Health Account</p>
+              
+              <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside font-sans">
+                <li>Oversee daily dental revenue cycle management operations, dental billing teams, and claims processing SLAs.</li>
+                <li>Conduct regular quality audits, complex EOB reconciliation, and insurance pre-authorization workflows.</li>
+                <li>Direct team performance coaching, reducing claims denial turnaround times and escalating high-priority patient balances.</li>
+              </ul>
+            </div>
+
+            <!-- Job 2 -->
+            <div class="relative group space-y-2">
+              <div class="absolute -left-[23px] md:-left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-neonPurple ring-4 ring-cyberCard"></div>
+              
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                <h4 class="font-bold text-base text-white">Customer Service Associate (Seasonal)</h4>
+                <span class="font-mono text-xs text-slate-400">APR 2023 – JUL 2023</span>
+              </div>
+              <p class="text-xs font-mono font-semibold text-purple-300">Amazon</p>
+              
+              <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside font-sans">
+                <li>Managed high-volume customer inquiries, order fulfillment logistics, and account disputes.</li>
+                <li>Maintained top-tier Customer Satisfaction (CSAT) scores through empathetic problem-solving and swift resolution.</li>
+              </ul>
+            </div>
+
+            <!-- Job 3 -->
+            <div class="relative group space-y-2">
+              <div class="absolute -left-[23px] md:-left-[31px] top-1 w-3.5 h-3.5 rounded-full bg-neonPink ring-4 ring-cyberCard"></div>
+              
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                <h4 class="font-bold text-base text-white">Tier 2 Offline / RRD Specialist</h4>
+                <span class="font-mono text-xs text-slate-400">APR 2021 – SEP 2021</span>
+              </div>
+              <p class="text-xs font-mono font-semibold text-pink-300">Teleperformance // Expedia Chase Account</p>
+              
+              <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside font-sans">
+                <li>Handled Tier-2 specialized travel reservation escalations, refund audits, and complex booking modifications.</li>
+                <li>Utilized Sabre and Amadeus Global Distribution Systems (GDS) to resolve high-stakes ticketing issues.</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= TAB 2: SYSTEMS & TOOLBELT ================= -->
+        <div id="tab-systems" class="window-tab hidden space-y-6">
+          <div class="border-b border-cyberBorder pb-4">
+            <h3 class="font-pixel text-2xl text-neonPurple font-bold">SYSTEMS_TOOLBELT.SYS</h3>
+            <p class="text-xs font-mono text-slate-400">Inventory of software mastery across medical billing, CRM, and executive admin operations.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            <!-- Category 1 -->
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-5 rounded-xl space-y-3">
+              <div class="flex items-center gap-2 text-neonCyan font-mono font-bold text-sm">
+                <i class="fa-solid fa-tooth"></i> HEALTHCARE & DENTAL
+              </div>
+              <div class="flex flex-wrap gap-1.5 text-xs font-mono">
+                <span class="bg-cyberCard border border-neonCyan/40 text-neonCyan px-2.5 py-1 rounded">Dentrix</span>
+                <span class="bg-cyberCard border border-neonCyan/40 text-neonCyan px-2.5 py-1 rounded">Open Dental</span>
+                <span class="bg-cyberCard border border-neonCyan/40 text-neonCyan px-2.5 py-1 rounded">Carestack</span>
+                <span class="bg-cyberCard border border-neonCyan/40 text-neonCyan px-2.5 py-1 rounded">Practice-Web</span>
+                <span class="bg-cyberCard border border-neonCyan/40 text-neonCyan px-2.5 py-1 rounded">Echart</span>
+                <span class="bg-cyberCard border border-neonCyan/40 text-neonCyan px-2.5 py-1 rounded">EOB Reconciliation</span>
+              </div>
+            </div>
+
+            <!-- Category 2 -->
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-5 rounded-xl space-y-3">
+              <div class="flex items-center gap-2 text-neonPurple font-mono font-bold text-sm">
+                <i class="fa-solid fa-headset"></i> ENTERPRISE CRM & ESCALATIONS
+              </div>
+              <div class="flex flex-wrap gap-1.5 text-xs font-mono">
+                <span class="bg-cyberCard border border-purple-400/40 text-purple-300 px-2.5 py-1 rounded">Salesforce</span>
+                <span class="bg-cyberCard border border-purple-400/40 text-purple-300 px-2.5 py-1 rounded">ServiceNow</span>
+                <span class="bg-cyberCard border border-purple-400/40 text-purple-300 px-2.5 py-1 rounded">Amazon Connect</span>
+                <span class="bg-cyberCard border border-purple-400/40 text-purple-300 px-2.5 py-1 rounded">RingCentral</span>
+                <span class="bg-cyberCard border border-purple-400/40 text-purple-300 px-2.5 py-1 rounded">Sabre / Amadeus GDS</span>
+              </div>
+            </div>
+
+            <!-- Category 3 -->
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-5 rounded-xl space-y-3">
+              <div class="flex items-center gap-2 text-neonPink font-mono font-bold text-sm">
+                <i class="fa-solid fa-paperclip"></i> ADMIN & CREATIVE SUITE
+              </div>
+              <div class="flex flex-wrap gap-1.5 text-xs font-mono">
+                <span class="bg-cyberCard border border-pink-400/40 text-pink-300 px-2.5 py-1 rounded">MS Excel (Pivots)</span>
+                <span class="bg-cyberCard border border-pink-400/40 text-pink-300 px-2.5 py-1 rounded">Google Workspace</span>
+                <span class="bg-cyberCard border border-pink-400/40 text-pink-300 px-2.5 py-1 rounded">Substack Editor</span>
+                <span class="bg-cyberCard border border-pink-400/40 text-pink-300 px-2.5 py-1 rounded">Canva Brand Design</span>
+                <span class="bg-cyberCard border border-pink-400/40 text-pink-300 px-2.5 py-1 rounded">Slack / Teams</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Academic Honors Banner -->
+          <div class="bg-gradient-to-r from-neonPurple/20 via-cyberHeader to-neonCyan/20 border border-cyberBorder p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+            <div class="space-y-1">
+              <span class="font-mono text-neonGold font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-award"></i> LICENSED PROFESSIONAL TEACHER (LPT)
+              </span>
+              <p class="text-slate-300">Bachelor of Early Childhood Education • <strong>Cum Laude</strong> (Cebu Normal University)</p>
+            </div>
+            <span class="font-mono text-[11px] bg-cyberCard px-3 py-1.5 rounded border border-cyberBorder text-slate-400">
+              ACADEMIC EXCELLENCE AWARD
+            </span>
+          </div>
+        </div>
+
+        <!-- ================= TAB 3: WRITING & DESIGN ================= -->
+        <div id="tab-writing" class="window-tab hidden space-y-6">
+          <div class="border-b border-cyberBorder pb-4 flex justify-between items-end">
+            <div>
+              <h3 class="font-pixel text-2xl text-neonPink font-bold">WRITING_&_DESIGN.VAULT</h3>
+              <p class="text-xs font-mono text-slate-400">Creative storytelling on Substack (@hellokieri) and Canva visual design work.</p>
+            </div>
+            <a href="https://hellokieri.substack.com/" target="_blank" class="text-xs font-mono text-neonPink hover:underline flex items-center gap-1">
+              SUBSTACK <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+
+          <!-- Substack Highlights Grid -->
+          <div class="space-y-3">
+            <span class="font-mono text-xs text-neonGold font-bold uppercase tracking-wider block">FEATURED ESSAYS</span>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              <!-- Essay 1 -->
+              <a href="https://hellokieri.substack.com/" target="_blank" class="group bg-cyberHeader/60 border border-cyberBorder hover:border-neonPink p-4 rounded-xl space-y-2.5 transition-all flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[10px] font-mono text-slate-500">ESSAY // SEP 2026</span>
+                  <h4 class="font-bold text-sm text-white group-hover:text-neonPink transition-colors">
+                    "who am i if i don't feel my emotions too deeply?"
+                  </h4>
+                  <p class="text-xs text-slate-400 line-clamp-3">
+                    Reflections on emotional vulnerability, personal depth, and finding quiet meaning in daily life.
+                  </p>
+                </div>
+                <span class="text-[11px] font-mono text-neonPink flex items-center gap-1 pt-2">
+                  Read Essay <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+              </a>
+
+              <!-- Essay 2 -->
+              <a href="https://hellokieri.substack.com/" target="_blank" class="group bg-cyberHeader/60 border border-cyberBorder hover:border-neonPink p-4 rounded-xl space-y-2.5 transition-all flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[10px] font-mono text-slate-500">REFLECTION // SEP 2026</span>
+                  <h4 class="font-bold text-sm text-white group-hover:text-neonPink transition-colors">
+                    "in case you need a gentle reminder..."
+                  </h4>
+                  <p class="text-xs text-slate-400 line-clamp-3">
+                    Notes on self-compassion, reclaiming inner calm, and navigating busy days with grace.
+                  </p>
+                </div>
+                <span class="text-[11px] font-mono text-neonPink flex items-center gap-1 pt-2">
+                  Read Essay <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+              </a>
+
+              <!-- Essay 3 -->
+              <a href="https://hellokieri.substack.com/" target="_blank" class="group bg-cyberHeader/60 border border-cyberBorder hover:border-neonPink p-4 rounded-xl space-y-2.5 transition-all flex flex-col justify-between">
+                <div class="space-y-1.5">
+                  <span class="text-[10px] font-mono text-slate-500">ESSAY // AUG 2026</span>
+                  <h4 class="font-bold text-sm text-white group-hover:text-neonPink transition-colors">
+                    "one day more"
+                  </h4>
+                  <p class="text-xs text-slate-400 line-clamp-3">
+                    On transitions, small daily rituals, and taking life chapter by chapter.
+                  </p>
+                </div>
+                <span class="text-[11px] font-mono text-neonPink flex items-center gap-1 pt-2">
+                  Read Essay <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+              </a>
+
+            </div>
+          </div>
+
+          <!-- Canva Design Showcases -->
+          <div class="space-y-3 pt-2">
+            <span class="font-mono text-xs text-neonCyan font-bold uppercase tracking-wider block">CANVA BRAND DESIGN PROJECTS</span>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- Design 1 -->
+              <div class="bg-cyberHeader/60 border border-cyberBorder rounded-xl overflow-hidden p-4 flex gap-4 items-center">
+                <div class="w-20 h-20 bg-gradient-to-tr from-purple-900 to-indigo-900 rounded-lg flex items-center justify-center font-pixel text-neonCyan font-bold text-center p-2 text-xs flex-shrink-0">
+                  LUNA HAVEN
+                </div>
+                <div class="space-y-1">
+                  <h5 class="font-bold text-sm text-white">Luna Haven Co.</h5>
+                  <p class="text-xs text-slate-400">Cozy brand identity, Instagram mood boards, and aesthetic typography palettes created in Canva.</p>
+                  <span class="inline-block text-[10px] font-mono text-neonCyan bg-neonCyan/10 px-2 py-0.5 rounded">Brand Identity</span>
+                </div>
+              </div>
+
+              <!-- Design 2 -->
+              <div class="bg-cyberHeader/60 border border-cyberBorder rounded-xl overflow-hidden p-4 flex gap-4 items-center">
+                <div class="w-20 h-20 bg-gradient-to-tr from-amber-900 to-orange-900 rounded-lg flex items-center justify-center font-pixel text-neonGold font-bold text-center p-2 text-xs flex-shrink-0">
+                  SUNBAKED
+                </div>
+                <div class="space-y-1">
+                  <h5 class="font-bold text-sm text-white">Sunbaked Coffee Lab</h5>
+                  <p class="text-xs text-slate-400">Warm artisanal menu assets, social media promotional collateral, and color storyboards.</p>
+                  <span class="inline-block text-[10px] font-mono text-neonGold bg-neonGold/10 px-2 py-0.5 rounded">Social Collateral</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= TAB 4: CONNECT & RESUME ================= -->
+        <div id="tab-connect" class="window-tab hidden space-y-6">
+          <div class="border-b border-cyberBorder pb-4">
+            <h3 class="font-pixel text-2xl text-neonGold font-bold">CONNECT_&_RESUME.EXE</h3>
+            <p class="text-xs font-mono text-slate-400">Direct contact channels for executive VA opportunities, operations lead roles, or writing collaborations.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Direct Email Action Box -->
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-6 rounded-xl space-y-4 flex flex-col justify-between">
+              <div class="space-y-2">
+                <span class="text-xs font-mono text-neonGold font-bold block"><i class="fa-solid fa-envelope"></i> DIRECT EMAIL CONNECTION</span>
+                <p class="text-xs text-slate-300">Click below to copy my primary email address directly to your clipboard:</p>
+                <div class="bg-cyberCard border border-cyberBorder p-3 rounded-lg font-mono text-sm text-neonCyan flex justify-between items-center">
+                  <span>carrie.baclayon@gmail.com</span>
+                  <i class="fa-solid fa-copy text-slate-500"></i>
+                </div>
+              </div>
+
+              <button 
+                onclick="copyEmailToClipboard()" 
+                id="copyBtn"
+                class="w-full bg-neonGold hover:bg-yellow-400 text-black font-pixel font-bold py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm"
+              >
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span id="copyBtnLabel">COPY EMAIL ADDRESS</span>
+              </button>
+            </div>
+
+            <!-- Social Links & Resume Access -->
+            <div class="bg-cyberHeader/60 border border-cyberBorder p-6 rounded-xl space-y-4 flex flex-col justify-between">
+              <div class="space-y-3">
+                <span class="text-xs font-mono text-neonCyan font-bold block"><i class="fa-solid fa-link"></i> EXTERNAL NETWORKS</span>
+                
+                <div class="space-y-2 font-mono text-xs">
+                  <a href="https://linkedin.com" target="_blank" class="bg-cyberCard hover:bg-cyberCard/80 border border-cyberBorder p-3 rounded-lg flex items-center justify-between text-slate-200 transition-colors block">
+                    <span class="flex items-center gap-2"><i class="fa-brands fa-linkedin text-neonCyan"></i> LinkedIn Profile</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-slate-500 text-[10px]"></i>
+                  </a>
+
+                  <a href="https://hellokieri.substack.com/" target="_blank" class="bg-cyberCard hover:bg-cyberCard/80 border border-cyberBorder p-3 rounded-lg flex items-center justify-between text-slate-200 transition-colors block">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-bookmark text-neonPink"></i> Substack (@hellokieri)</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-slate-500 text-[10px]"></i>
+                  </a>
+                </div>
+              </div>
+
+              <button 
+                onclick="triggerResumeNotification()" 
+                class="w-full bg-cyberBorder hover:bg-slate-700 text-white font-pixel font-bold py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm border border-slate-600"
+              >
+                <i class="fa-solid fa-file-pdf text-neonPink"></i>
+                <span>REQUEST LATEST RESUME (PDF)</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="max-w-6xl mx-auto px-4 py-6 w-full border-t border-cyberBorder text-center text-xs font-mono text-slate-500 space-y-1">
+    <p>© 2026 CARRIE BACLAYON • ALL RIGHTS RESERVED • CEBU CITY, PH 🇵🇭</p>
+    <p class="text-[10px] text-slate-600">REFINED Y2K TERMINAL ENGINE • BUILT WITH TAILWIND & WEB AUDIO API</p>
+  </footer>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // Handle Photo Upload
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('userAvatar').src = e.target.result;
+          playSound('action');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Audio State & Web Audio API SFX Synthesizer
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'tab') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'copy') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'action') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
+      } catch (e) {
+        // Fallback gracefully if audio context fails
+      }
+    }
+
+    function toggleAudioSound() {
+      soundEnabled = !soundEnabled;
+      const soundIcon = document.getElementById('soundIcon');
+      const soundText = document.getElementById('soundText');
+
+      if (soundEnabled) {
+        soundIcon.className = "fa-solid fa-volume-high text-neonCyan";
+        soundText.innerText = "SFX: ON";
+        playSound('tab');
+      } else {
+        soundIcon.className = "fa-solid fa-volume-xmark text-slate-500";
+        soundText.innerText = "SFX: OFF";
+      }
+    }
+
+    // Tab Switcher Logic
+    const windowTitles = {
+      'experience': 'module://work_experience.exe',
+      'systems': 'module://systems_toolbelt.sys',
+      'writing': 'module://writing_and_design.vault',
+      'connect': 'module://connect_and_resume.exe'
+    };
+
+    function switchTab(tabId) {
+      playSound('tab');
+
+      // Hide all tabs
+      document.querySelectorAll('.window-tab').forEach(tab => {
+        tab.classList.add('hidden');
+        tab.classList.remove('window-active');
+      });
+
+      // Reset button styles
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-neonCyan', 'border-neonPurple', 'border-neonPink', 'border-neonGold', 'glow-cyan', 'glow-purple', 'glow-pink');
+        btn.classList.add('border-cyberBorder');
+      });
+
+      // Show target tab
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) {
+        targetTab.classList.remove('hidden');
+        targetTab.classList.add('window-active');
+      }
+
+      // Update Active Button Style
+      const activeBtn = document.getElementById(`btn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-cyberBorder');
+        if (tabId === 'experience') activeBtn.classList.add('border-neonCyan', 'glow-cyan');
+        if (tabId === 'systems') activeBtn.classList.add('border-neonPurple', 'glow-purple');
+        if (tabId === 'writing') activeBtn.classList.add('border-neonPink', 'glow-pink');
+        if (tabId === 'connect') activeBtn.classList.add('border-neonGold');
+      }
+
+      // Update Window Header Title
+      const titleElem = document.getElementById('windowTitle');
+      if (titleElem) {
+        titleElem.innerText = windowTitles[tabId] || 'module://system.exe';
+      }
+
+      // Restore window body if minimized
+      const windowBody = document.getElementById('windowBody');
+      if (windowBody.style.display === 'none') {
+        windowBody.style.display = 'block';
+      }
+    }
+
+    // OS Window Controls (Close, Minimize, Maximize)
+    function closeCurrentWindow() {
+      playSound('action');
+      const windowBody = document.getElementById('windowBody');
+      windowBody.style.display = 'none';
+    }
+
+    function minimizeWindow() {
+      playSound('action');
+      const windowBody = document.getElementById('windowBody');
+      windowBody.style.display = windowBody.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function maximizeWindow() {
+      playSound('action');
+      const windowBody = document.getElementById('windowBody');
+      windowBody.style.display = 'block';
+      windowBody.classList.toggle('max-w-full');
+    }
+
+    // Copy Email Function
+    function copyEmailToClipboard() {
+      playSound('copy');
+      const email = 'carrie.baclayon@gmail.com';
+      
+      const textarea = document.createElement('textarea');
+      textarea.value = email;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      const btnLabel = document.getElementById('copyBtnLabel');
+      const originalText = btnLabel.innerText;
+      btnLabel.innerText = 'COPIED TO CLIPBOARD!';
+      
+      setTimeout(() => {
+        btnLabel.innerText = originalText;
+      }, 2000);
+    }
+
+    function triggerResumeNotification() {
+      playSound('action');
+      alert("Carrie Baclayon's official resume is available upon direct request via email. Click 'COPY EMAIL ADDRESS' to send a request!");
+    }
+
+    // Live Ticking Clock (Cebu City, GMT+8)
+    function updateClock() {
+      const now = new Date();
+      const options = {
+        timeZone: 'Asia/Manila',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+      const timeStr = new Intl.DateTimeFormat('en-US', options).format(now);
+      document.getElementById('liveClock').innerText = `${timeStr} PST`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Interactive Canvas Background (Particle Starfield)
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const particles = Array.from({ length: 90 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 2,
+      speedY: Math.random() * 0.4 + 0.1,
+      opacity: Math.random() * 0.8 + 0.2
+    }));
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(p => {
+        ctx.fillStyle = `rgba(0, 223, 216, ${p.opacity})`;
+        ctx.fillRect(p.x, p.y, p.size, p.size
